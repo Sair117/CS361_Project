@@ -18,8 +18,9 @@ VICTIM_CACHE_SIZE = 4      # 4 entries
 
 # ─── Cycle Penalties ───────────────────────────────────────────────────────
 CYCLES_L1_HIT = 1
-CYCLES_VC_SWAP = 2         # Additive to L1 miss probe (Total = 1 + 2 = 3)
-CYCLES_L2_FETCH = 15       # Additive to L1/VC miss probe
+CYCLES_VC_PROBE = 1        # 1 cycle to check Victim Cache on L1 miss
+CYCLES_VC_SWAP = 1         # 1 additional cycle to swap blocks if VC hits
+CYCLES_L2_FETCH = 15       # Additive to L1/VC miss probes
 
 # ─── Hardware State ────────────────────────────────────────────────────────
 l1_cache = []
@@ -166,6 +167,8 @@ def access_memory(address, op, use_vc):
 
     # ─── 2. Probe Victim Cache (L1 Miss) ─────────────────────────────────────
     if use_vc:
+        metrics["total_clock_cycles"] += CYCLES_VC_PROBE
+        
         if tag in victim_cache:
             # VC HIT
             metrics["total_clock_cycles"] += CYCLES_VC_SWAP
@@ -265,15 +268,15 @@ def run_test_micro_trace():
     Runs a tiny, hand-calculated trace to verify cycle logic and swaps.
     
     Expected Behavior:
-    1. R 0x1000 -> Tag 0x100, L1 Idx 0. Cold Miss -> L2. (+18 cycles)
+    1. R 0x1000 -> Tag 0x100, L1 Idx 0. Cold Miss -> L2. (+17 cycles)
     2. R 0x1004 -> Tag 0x100, L1 Idx 0. L1 Hit. (+1 cycle)
-    3. R 0xA000 -> Tag 0xA00, L1 Idx 0. Miss -> L2. Evicts 0x100 to VC. (+18 cycles)
+    3. R 0xA000 -> Tag 0xA00, L1 Idx 0. Miss -> L2. Evicts 0x100 to VC. (+17 cycles)
     4. R 0x1000 -> Tag 0x100, L1 Idx 0. L1 Miss, VC Hit! Swaps 0xA00 down to VC. (+3 cycles)
     5. W 0x1004 -> Tag 0x100, L1 Idx 0. L1 Hit (Write). Marks Dirty. (+1 cycle)
     
-    Total Cycles Expected: 16 + 1 + 16 + 3 + 1 = 37
+    Total Cycles Expected: 17 + 1 + 17 + 3 + 1 = 39
     Total Accesses: 5
-    AMAT: 37 / 5 = 7.4
+    AMAT: 39 / 5 = 7.8
     """
     print("--- [TEST] Running Micro-Trace ---", file=sys.stderr)
     reset_simulator()
@@ -289,7 +292,7 @@ def run_test_micro_trace():
     for op, addr in test_trace:
         access_memory(addr, op, use_vc=True)
         
-    print(f"[TEST] Total Cycles: {metrics['total_clock_cycles']} (Expected: 37)", file=sys.stderr)
+    print(f"[TEST] Total Cycles: {metrics['total_clock_cycles']} (Expected: 39)", file=sys.stderr)
     print(f"[TEST] L1 Hits: {metrics['l1_hits']} (Expected: 2)", file=sys.stderr)
     print(f"[TEST] VC Hits: {metrics['victim_cache_hits']} (Expected: 1)", file=sys.stderr)
     
