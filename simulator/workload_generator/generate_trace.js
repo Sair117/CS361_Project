@@ -37,10 +37,11 @@ const __dirname  = path.dirname(__filename);
 // ─── Constants ──────────────────────────────────────────────────────────────
 
 /**
- * Output file path — trace.txt lives in the parent 'simulator/' directory
+ * Output file paths — trace.txt lives in the parent 'simulator/' directory
  * so both the Node.js generator and the Python engine can reference it.
  */
-const OUTPUT_FILE = path.join(__dirname, '..', 'trace.txt');
+const OUTPUT_FILE_LOW  = path.join(__dirname, '..', 'trace_low.txt');
+const OUTPUT_FILE_HIGH = path.join(__dirname, '..', 'trace_high.txt');
 
 /**
  * Memory address ranges for each workload phase.
@@ -56,11 +57,19 @@ const PHASE_1 = {
     step:  4          // Word-aligned stride (4 bytes)
 };
 
-const PHASE_2 = {
-    name:  'Sensor Polling Burst',
+const PHASE_2_LOW = {
+    name:  'Small Sensor Polling (Low Traffic)',
     op:    'R',
     start: 0xA000,    // Sensor register base
-    end:   0xA500,    // Inclusive upper bound — large burst
+    end:   0xA010,    // Inclusive upper bound — small burst (2 cache blocks)
+    step:  4          // Word-aligned stride
+};
+
+const PHASE_2_HIGH = {
+    name:  'Massive Sensor Polling Burst (High Traffic)',
+    op:    'R',
+    start: 0xA000,    // Sensor register base
+    end:   0xA500,    // Inclusive upper bound — large burst (80 cache blocks)
     step:  4          // Word-aligned stride
 };
 
@@ -80,12 +89,6 @@ const PHASE_3 = {
     step:  4          // Word-aligned stride
 };
 
-/**
- * Collects all trace lines before writing to disk in one batch.
- * Each entry is a string like "R 0x1000".
- */
-const traceLines = [];
-
 // ═════════════════════════════════════════════════════════════════════════════
 // BLOCK 2 — Phase 1: Instruction Fetches (R)
 // ═════════════════════════════════════════════════════════════════════════════
@@ -93,11 +96,12 @@ const traceLines = [];
 /**
  * Generates trace lines for a given workload phase.
  * Iterates from phase.start to phase.end (inclusive) in increments of
- * phase.step, pushing formatted trace entries into the traceLines array.
+ * phase.step, pushing formatted trace entries into the provided array.
  *
  * @param {Object} phase - A phase config object { name, op, start, end, step }
+ * @param {Array} linesArray - The array to collect trace strings
  */
-const generatePhase = (phase) => {
+const generatePhase = (phase, linesArray) => {
     console.log(`[GEN] Generating phase: ${phase.name}`);
     console.log(`      Range: 0x${phase.start.toString(16).toUpperCase()} – 0x${phase.end.toString(16).toUpperCase()}, Op: ${phase.op}`);
 
@@ -105,7 +109,7 @@ const generatePhase = (phase) => {
     for (let addr = phase.start; addr <= phase.end; addr += phase.step) {
         // Format address as 0x-prefixed uppercase hex string
         const hexAddr = `0x${addr.toString(16).toUpperCase()}`;
-        traceLines.push(`${phase.op} ${hexAddr}`);
+        linesArray.push(`${phase.op} ${hexAddr}`);
         count++;
     }
 
@@ -121,7 +125,7 @@ const generatePhase = (phase) => {
  *
  * Expected: These 2 blocks warm up L1 slots 0 and 1.
  */
-generatePhase(PHASE_1);
+// Execution moved to main block
 
 // ═════════════════════════════════════════════════════════════════════════════
 // BLOCK 3 — Phase 2: Sensor Polling Burst (R)
@@ -140,7 +144,7 @@ generatePhase(PHASE_1);
  * the same slot as tag 0x100 from Phase 1. This is the conflict miss
  * that pushes the instruction block into the Victim Cache.
  */
-generatePhase(PHASE_2);
+// Execution moved to main block
 
 // ═════════════════════════════════════════════════════════════════════════════
 // BLOCK 4 — Phase 2b: Sensor Data Write-Back (W)
@@ -157,7 +161,7 @@ generatePhase(PHASE_2);
  * 5 cache blocks (tags 0xB00–0xB04). When these blocks are eventually
  * evicted, their dirty bits will trigger write-back behavior.
  */
-generatePhase(PHASE_2B);
+// Execution moved to main block
 
 // ═════════════════════════════════════════════════════════════════════════════
 // BLOCK 5 — Phase 3: Re-Execution / Victim Cache Trigger (R)
@@ -177,7 +181,7 @@ generatePhase(PHASE_2B);
  *
  * This is the core demonstration of the Victim Cache rescue mechanism.
  */
-generatePhase(PHASE_3);
+// Execution moved to main block
 
 // ═════════════════════════════════════════════════════════════════════════════
 // BLOCK 6 — Write Trace File to Disk
@@ -185,17 +189,14 @@ generatePhase(PHASE_3);
 
 /**
  * Writes all accumulated trace lines to the output file.
- * Uses a single fs.writeFileSync call for atomicity — the entire trace
- * is written at once, preventing partial-file issues.
+ * Uses a single fs.writeFileSync call for atomicity.
  */
-const writeTraceFile = () => {
-    const content = traceLines.join('\n') + '\n';   // Trailing newline for POSIX compliance
-    fs.writeFileSync(OUTPUT_FILE, content, 'utf-8');
-    console.log(`[IO] Trace file written to: ${OUTPUT_FILE}`);
-    console.log(`[IO] Total trace lines: ${traceLines.length}`);
+const writeTraceFile = (lines, filepath) => {
+    const content = lines.join('\n') + '\n';   // Trailing newline for POSIX compliance
+    fs.writeFileSync(filepath, content, 'utf-8');
+    console.log(`[IO] Trace file written to: ${filepath}`);
+    console.log(`[IO] Total trace lines: ${lines.length}`);
 };
-
-writeTraceFile();
 
 // ═════════════════════════════════════════════════════════════════════════════
 // BLOCK 7 — [TEST] Validation: Read Back and Verify
@@ -278,4 +279,24 @@ const validateTraceFile = () => {
     }
 };
 
-validateTraceFile();
+// ============================================================================
+// Main Execution
+// ============================================================================
+
+console.log("=== Generating Low Traffic Trace ===");
+const traceLow = [];
+generatePhase(PHASE_1, traceLow);
+generatePhase(PHASE_2_LOW, traceLow);
+generatePhase(PHASE_2B, traceLow);
+generatePhase(PHASE_3, traceLow);
+writeTraceFile(traceLow, OUTPUT_FILE_LOW);
+
+console.log("\n=== Generating High Traffic Trace ===");
+const traceHigh = [];
+generatePhase(PHASE_1, traceHigh);
+generatePhase(PHASE_2_HIGH, traceHigh);
+generatePhase(PHASE_2B, traceHigh);
+generatePhase(PHASE_3, traceHigh);
+writeTraceFile(traceHigh, OUTPUT_FILE_HIGH);
+
+console.log("\n=== Trace Generation Complete ===");
