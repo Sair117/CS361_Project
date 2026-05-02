@@ -1,0 +1,101 @@
+/* =============================================================================
+   Charts Styles
+   ============================================================================= */
+
+.charts-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.chart-card {
+  padding: var(--space-sm) var(--space-xs);
+}
+
+.chart-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-xs);
+  padding: 0 var(--space-xs);
+}
+
+.chart-card__title {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.chart-card__value {
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+/* ─── Chart Tooltip ─────────────────────────────────────────────────────────── */
+
+.chart-tooltip {
+  background: var(--surface);
+  border: var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-md);
+  box-shadow: var(--shadow-lg);
+  min-width: 120px;
+}
+
+.chart-tooltip__label {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.chart-tooltip__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  padding: 1px 0;
+}
+
+.chart-tooltip__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.chart-tooltip__name {
+  color: var(--text-secondary);
+  flex: 1;
+}
+
+.chart-tooltip__value {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* ─── Chart Legend ──────────────────────────────────────────────────────────── */
+
+.chart-legend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  padding-top: var(--space-xs);
+}
+
+.chart-legend__item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.chart-legend__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}

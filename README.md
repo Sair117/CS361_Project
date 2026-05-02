@@ -1,69 +1,179 @@
-# Power-Aware Cache Architecture Simulator
+# 🏗️ Power-Aware Cache Architecture Simulator
 
-This project is a simulation of a memory hierarchy for an Embedded IoT System (Agricultural Soil Sensor). It consists of two components:
-1. **IoT Workload Generator (Node.js)**: Produces a deterministic memory trace modeling a sensor wake-up, burst polling, data processing, and instruction re-execution.
-2. **Hardware Simulation Engine (Python)**: Reads the generated trace and accurately models a blocking CPU with an L1 cache, a fully-associative Victim Cache, and a perfect L2 cache.
+An interactive, real-time visualization of a memory hierarchy with **L1 direct-mapped cache**, **Victim Cache (fully associative, LRU)**, and **L2/Main Memory** — built for CS361 Computer Architecture.
+
+> **[▶ Live Demo](https://mr-kraken2411.github.io/CS361_Project/)** — No install required, runs entirely in-browser.
+
+---
+
+## ✨ Features
+
+### Core Simulation
+- **Step-by-step trace playback** with Play/Pause/Step/Reset controls
+- **Adjustable speed** (1×–20×) with smooth real-time updates
+- **3 built-in workloads**: Low Traffic (sensor wake), High Traffic (thrashing), Conflict Loop (VC showcase)
+- **VC ON/OFF toggle** to see the impact of the Victim Cache in real-time
+
+### Visual Components
+| Component | Description |
+|---|---|
+| **L1 Grid** | 8-slot direct-mapped cache with animated block insertion, tag color pulses on hit |
+| **Victim Cache Grid** | 4-entry fully associative cache with LRU ordering, MRU dot indicator |
+| **L2 Pool** | Backing store with eviction counters and activity pulse rings |
+| **Flow Arrows** | Animated traveling dots and directional labels ("↑ rescued" / "↓ displaced") |
+| **Access Log** | Color-coded scrolling event log with per-step AMAT tracking |
+
+### Analytics (Phase 4)
+- **📈 AMAT Chart** — Area chart showing average memory access time convergence
+- **📊 Hit Rate Chart** — Multi-line chart tracking L1, VC, and L2 hit percentages
+- **📉 Hit Distribution** — Stacked bar showing cumulative hit breakdown
+
+### Advanced Features
+- **🧊 3D Architecture View** — Interactive React Three Fiber scene with floating cache layers, data particles, and auto-rotation
+- **⚖️ Comparison Mode** — Side-by-side VC ON vs OFF analysis with savings calculation
+- **📖 Architecture Guide** — Educational reference explaining cache hierarchy, swap mechanics, dirty bits, and AMAT formula
+
+### Animation (Framer Motion)
+- Directional slide-in/out for block movements
+- Tag color pulses (green=L1 hit, amber=VC hit, red=L2 fetch)
+- Spring-animated dirty badges and flow labels
+- VC eviction shake effect
+- Traveling dot animations along data flow paths
+
+---
 
 ## 🏗️ Architecture
 
-The simulator models the following memory hierarchy and access penalties:
+```
+CPU
+ │  1 cycle
+ ▼
+┌──────────────────────────┐
+│  L1 Cache                │  Direct-mapped, 8 blocks × 16B
+│  Index = addr >> 4 & 0x7 │  Tag = addr >> 7
+└──────────┬───────────────┘
+           │  +1 cycle (VC probe)
+           ▼
+┌──────────────────────────┐
+│  Victim Cache            │  Fully associative, 4 entries
+│  LRU eviction policy     │  Swap on hit (L1 ↔ VC)
+└──────────┬───────────────┘
+           │  +15 cycles (L2 fetch)
+           ▼
+┌──────────────────────────┐
+│  L2 / Main Memory        │  Perfect (infinite capacity)
+│  Write-back on eviction  │
+└──────────────────────────┘
+```
 
-*   **L1 Cache**: Direct-mapped, 8 blocks (16 bytes/block). Penalty: **1 cycle**.
-*   **Victim Cache (VC)**: Fully associative, 4 entries with Least Recently Used (LRU) eviction. Penalty: **2 cycles** (additive to L1 miss).
-*   **L2 Cache**: Modeled as an infinite/perfect cache. Penalty: **15 cycles** (additive to L1/VC miss).
+### Access Costs
+| Scenario | Path | Total Cycles |
+|---|---|---|
+| **L1 Hit** | CPU → L1 ✓ | **1 cycle** |
+| **VC Hit** | CPU → L1 ✗ → VC ✓ → swap | **2 cycles** |
+| **L2 Fetch** | CPU → L1 ✗ → VC ✗ → L2 | **17 cycles** |
 
-### Core Mechanisms
+---
 
-1.  **Victim Swap Logic**: When an address misses in L1 but hits in the VC, the target block is popped from the VC and placed into L1. Simultaneously, the block evicted from L1 is pushed into the VC as the Most Recently Used (MRU) block. Total cycle cost: 3 cycles.
-2.  **L2 Fetch Workflow**: When an address misses in both L1 and VC, it is fetched from L2 directly into L1. The block displaced from L1 is pushed to the VC. If the VC is full, its LRU block is evicted to L2. Total cycle cost: 18 cycles.
-3.  **Write-Back & Dirty Bits**: The simulator supports Write (`W`) operations. A write marks the cache block as `dirty`. This dirty bit travels with the block between L1 and the VC. When a dirty block is finally evicted from the VC to L2, it triggers a "Write-Back". For embedded pipelined architectures, this eviction is silent and incurs no extra penalty cycles.
-
-## 🚀 How to Run
+## 🚀 Getting Started
 
 ### Prerequisites
-*   Node.js (for workload generation)
-*   Python 3.x (for simulation engine)
+- **Node.js 18+** (for frontend)
+- **Python 3.x** (for original backend simulator, optional)
 
-### 1. Generate the Trace File
-Navigate to the workload generator directory and run the script. This will output a `trace.txt` file in the `simulator/` directory.
+### Run the Frontend (Interactive Visualizer)
 
 ```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open [http://localhost:5173](http://localhost:5173) in your browser.
+
+### Run the Original Backend Simulator
+
+```bash
+# Generate trace
 cd simulator/workload_generator
 node generate_trace.js
-```
 
-### 2. Run the Hardware Simulator
-Navigate to the hardware engine directory and run the simulator against the generated trace.
-
-```bash
-cd simulator/hardware_engine
+# Run simulator
+cd ../hardware_engine
 python cache_simulator.py
 ```
-*Optional: You can append `--test` to the command to run a small inline micro-trace before the main simulation to verify the exact logic flow and cycle penalties.*
 
-### Output Format
-The simulator outputs the calculated memory metrics as a raw JSON string at the end of execution, suitable for parsing by a frontend application:
+---
 
-```json
-{
-  "total_accesses": 348,
-  "read_ops": 331,
-  "write_ops": 17,
-  "total_clock_cycles": 1878,
-  "l1_hits": 258,
-  "l1_hit_rate": 0.7414,
-  "victim_cache_hits": 0,
-  "victim_cache_hit_rate": 0.0,
-  "l2_fetches": 90,
-  "l2_hit_rate": 0.2586,
-  "total_writebacks": 0,
-  "amat": 5.4
-}
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|---|---|
+| **Framework** | React 19 + Vite 8 |
+| **Animation** | Framer Motion 12 |
+| **3D Rendering** | React Three Fiber + Drei |
+| **Charts** | Recharts 3 |
+| **Styling** | Vanilla CSS (glassmorphism design system) |
+| **Simulation** | Pure JavaScript (ported from Python) |
+| **Deployment** | GitHub Pages (via GitHub Actions) |
+
+---
+
+## 📁 Project Structure
+
+```
+CS361_Project/
+├── .github/workflows/deploy.yml     # GitHub Pages CI/CD
+├── README.md
+├── simulator/                        # Original Python engine
+│   ├── hardware_engine/
+│   └── workload_generator/
+└── frontend/                         # React + Vite app
+    ├── index.html
+    ├── vite.config.js
+    ├── package.json
+    └── src/
+        ├── main.jsx
+        ├── App.jsx                   # Root layout + state management
+        ├── App.css
+        ├── index.css                 # Design tokens + global styles
+        ├── engine/
+        │   ├── cacheEngine.js        # Step-able cache simulator
+        │   └── traceData.js          # Embedded workload traces
+        ├── components/
+        │   ├── L1Grid.jsx            # L1 cache grid (animated)
+        │   ├── VCGrid.jsx            # Victim cache grid (animated)
+        │   ├── L2Pool.jsx            # L2 backing store
+        │   ├── FlowArrow.jsx         # Data flow indicators
+        │   ├── AccessLog.jsx         # Scrolling event log
+        │   ├── MetricsCharts.jsx     # Recharts integration
+        │   ├── HeroScene.jsx         # 3D R3F architecture view
+        │   ├── CompareMode.jsx       # Side-by-side VC comparison
+        │   └── ArchitectureGuide.jsx # Educational reference panel
+        └── styles/
+            ├── simulation.css
+            ├── charts.css
+            ├── hero.css
+            ├── compare.css
+            └── architecture.css
 ```
 
-## 🔍 Architectural Insight: The Victim Cache Flush
-You might notice that `victim_cache_hits` is **0** when running the default workload trace. **This is architecturally accurate!**
+---
 
-The sensor polling burst generates sequential reads from `0xA000` to `0xA500` (80 unique memory blocks). Since the Victim Cache only holds **4 blocks**, this massive 80-block burst completely flushes the VC 20 times over. When the CPU attempts to re-execute instructions at `0x1000`, the original instruction blocks have long been evicted to L2, resulting in an L2 fetch rather than a Victim Cache rescue. 
+## 📊 Sample Results (Conflict Loop Workload)
 
-This correctly demonstrates a real-world edge case: Victim Caches are highly effective at mitigating small conflict loops, but are entirely bypassed by massive sequential bursts (thrashing).
+| Metric | VC ON | VC OFF |
+|---|---|---|
+| **Total Accesses** | 80 | 80 |
+| **L1 Hits** | 60 (75%) | 60 (75%) |
+| **VC Hits** | 18 (22.5%) | 0 (0%) |
+| **L2 Fetches** | 2 | 20 |
+| **Total Cycles** | 148 | 380 |
+| **AMAT** | **1.85 cyc** | **4.75 cyc** |
+| **Cycle Savings** | — | **232 cycles (61.1% reduction)** |
+
+---
+
+## 📜 License
+
+This project was developed for CS361 — Computer Architecture at the University.

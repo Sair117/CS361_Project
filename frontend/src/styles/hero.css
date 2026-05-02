@@ -1,0 +1,105 @@
+/* =============================================================================
+   Hero 3D Scene Styles
+   ============================================================================= */
+
+.hero-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(7, 7, 13, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: fade-in 0.3s ease-out;
+}
+
+.hero-scene {
+  width: calc(100vw - 32px);
+  height: calc(100vh - 32px);
+  background: var(--surface);
+  border: var(--glass-border);
+  border-radius: var(--radius-xl);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg), var(--shadow-glow-accent);
+}
+
+.hero-scene__header {
+  padding: var(--space-lg) var(--space-xl);
+  text-align: center;
+  position: relative;
+  border-bottom: var(--border-subtle);
+}
+
+.hero-scene__title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--text-primary), var(--accent-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 4px;
+}
+
+.hero-scene__subtitle {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.hero-scene__close {
+  position: absolute;
+  top: var(--space-md);
+  right: var(--space-lg);
+  background: var(--surface-elevated);
+  border: var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.hero-scene__close:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.hero-scene__canvas {
+  flex: 1;
+  min-height: 0;
+  cursor: grab;
+  background: var(--bg-primary);
+}
+
+.hero-scene__canvas:active {
+  cursor: grabbing;
+}
+
+.hero-scene__legend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xl);
+  padding: var(--space-md) var(--space-xl);
+  border-top: var(--border-subtle);
+  background: var(--bg-secondary);
+}
+
+.hero-legend__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.hero-legend__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow: 0 0 8px currentColor;
+}

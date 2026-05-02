@@ -33,16 +33,16 @@ def reset_simulator():
     global l1_cache, victim_cache, metrics
     l1_cache = [None] * L1_SIZE
     victim_cache = OrderedDict()
-metrics = {
-    "total_accesses": 0,
-    "total_clock_cycles": 0,
-    "l1_hits": 0,
-    "victim_cache_hits": 0,
-    "l2_fetches": 0,
+    metrics = {
+        "total_accesses": 0,
+        "total_clock_cycles": 0,
+        "l1_hits": 0,
+        "victim_cache_hits": 0,
+        "l2_fetches": 0,
         "total_writebacks": 0,
-    "read_ops": 0,
-    "write_ops": 0
-}
+        "read_ops": 0,
+        "write_ops": 0
+    }
 
 # Initialize the simulator right away
 reset_simulator()
@@ -256,12 +256,6 @@ def calculate_metrics():
 # BLOCK 8 — [TEST] Inline Verification
 # =============================================================================
 
-def reset_simulator():
-    """Resets all global state for clean testing."""
-    global l1_cache, victim_cache, metrics
-    l1_cache = [None] * L1_SIZE
-    victim_cache = OrderedDict()
-    metrics = {k: 0 for k in metrics}
 
 def run_test_micro_trace():
     """

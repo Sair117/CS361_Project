@@ -1,0 +1,161 @@
+/* =============================================================================
+   Access Log Styles
+   ============================================================================= */
+
+.access-log {
+  width: 100%;
+}
+
+.access-log__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-sm);
+}
+
+.access-log__count {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.access-log__scroll {
+  max-height: 180px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  border: var(--border-subtle);
+}
+
+/* ─── Table Header ──────────────────────────────────────────────────────────── */
+
+.access-log__table-header {
+  display: grid;
+  grid-template-columns: 42px 32px 72px 62px 32px 1fr 50px 55px;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-md);
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-bottom: var(--border-subtle);
+  background: var(--surface);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+/* ─── Log Entry Row ─────────────────────────────────────────────────────────── */
+
+.log-entry {
+  display: grid;
+  grid-template-columns: 42px 32px 72px 62px 32px 1fr 50px 55px;
+  gap: var(--space-xs);
+  padding: 3px var(--space-md);
+  font-size: 0.72rem;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+  transition: background var(--transition-fast);
+}
+
+.log-entry:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.log-entry--l1-hit {
+  border-left: 2px solid var(--color-l1-hit);
+}
+
+.log-entry--vc-hit {
+  border-left: 2px solid var(--color-vc-hit);
+}
+
+.log-entry--l2-fetch {
+  border-left: 2px solid var(--color-l2-fetch);
+}
+
+/* ─── Column Styles ─────────────────────────────────────────────────────────── */
+
+.access-log__col {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.access-log__col--step {
+  color: var(--text-muted);
+  font-size: 0.65rem;
+}
+
+.access-log__col--addr {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.access-log__col--tag {
+  color: var(--text-secondary);
+}
+
+.access-log__col--idx {
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.access-log__col--cycles {
+  color: var(--text-secondary);
+  font-size: 0.68rem;
+}
+
+.access-log__col--amat {
+  color: var(--accent-secondary);
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+/* ─── Op Badge ──────────────────────────────────────────────────────────────── */
+
+.log-op {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 800;
+}
+
+.log-op--read {
+  background: rgba(108, 99, 255, 0.12);
+  color: var(--accent-primary);
+}
+
+.log-op--write {
+  background: var(--color-dirty-dim);
+  color: var(--color-dirty);
+}
+
+/* ─── Result Badge ──────────────────────────────────────────────────────────── */
+
+.log-result {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.log-result--l1-hit {
+  color: var(--color-l1-hit);
+}
+
+.log-result--vc-hit {
+  color: var(--color-vc-hit);
+}
+
+.log-result--l2-fetch {
+  color: var(--color-l2-fetch);
+}
