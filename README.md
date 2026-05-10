@@ -2,7 +2,7 @@
 
 An interactive, real-time visualization of a memory hierarchy with **L1 direct-mapped cache**, **Victim Cache (fully associative, LRU)**, and **L2/Main Memory** — built for CS361 Computer Architecture.
 
-> **[▶ Live Demo](https://mr-kraken2411.github.io/CS361_Project/)** — No install required, runs entirely in-browser.
+> **[▶ Live Demo](https://sair117.github.io/CS361_Project/)** — No install required, runs entirely in-browser.
 
 ---
 
